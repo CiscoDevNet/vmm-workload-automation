@@ -24,7 +24,7 @@ def csv_file_read(filename):
             for row in reader:
                 csv_map = {}
                 for key, val in row.items():
-                    csv_map.update({key: val})
+                    csv_map.update({key.strip(): val.strip()})
                 csv_list.append(csv_map)
             return csv_list, None
     except Exception as exc:
