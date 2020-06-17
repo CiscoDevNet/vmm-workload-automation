@@ -15,7 +15,12 @@ def read(fname):
     '''
     with open(os.path.join(os.path.dirname(__file__), fname),
               encoding='utf-8') as file_desc:
-        return file_desc.read()
+        file_data = file_desc.read()
+    str_var = ""
+    for file_ln in file_data.split("\n"):
+        if not file_ln.startswith("#"):
+            str_var = str_var + file_ln + "\n"
+    return str_var
 
 vmm_env = os.getenv("VMM_TMP_VENV")
 if vmm_env is None:
@@ -24,7 +29,7 @@ else:
     CFG_DIR = './etc/vmm_workload_auto'
 
 setup(name='vmm_workload_auto',
-      version='1.0.0',
+      version='1.0.1',
       description='Workload Automation for VMM',
       author='Padmanabhan Krishnan',
       author_email='padkrish@cisco.com',
