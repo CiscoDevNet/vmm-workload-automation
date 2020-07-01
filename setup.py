@@ -40,7 +40,7 @@ else:
     CFG_DIR = './etc/vmm_workload_auto'
 
 setup(name='vmm_workload_auto',
-      version='1.0.2',
+      version='1.0.3',
       description='Workload Automation for VMM',
       author='Padmanabhan Krishnan',
       author_email='padkrish@cisco.com',
@@ -58,7 +58,7 @@ setup(name='vmm_workload_auto',
                     'config/conf_multiple_dcnm.yml',
                     'config/conf_multiple_vcenter.yml'])],
       install_requires=[
-          'pyvim', 'pyvmomi', 'PyYAML', 'Flask',
+          'pyvim==3.0.2', 'pyvmomi==7.0', 'PyYAML==5.3', 'Flask',
       ],
       entry_points={
           'console_scripts': ['vmm_workload_auto = workload_auto.main:wl_auto_main']
