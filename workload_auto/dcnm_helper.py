@@ -54,12 +54,17 @@ class DcnmHelper:
         self._inventory_url = "rest/control/fabrics/"
         self._get_fab_association_url = "rest/control/fabrics/msd/fabric-associations/"
         self._get_pc_id_url = "rest/interface/pcid"
+        self._is_post_nd = self._check_nd_release()
         LOG.info("Initialized DCNM helper class")
 
-    def _build_url(self, remaining_url):
+    def _build_url(self, remaining_url, flag=True):
         '''
         Appends the base URL with the passing URL.
         '''
+        if flag:
+            if self._is_post_nd:
+                new = self._protocol_host_url +  "appcenter/cisco/dcnm/api/v1/"
+                return new + remaining_url
         return self._protocol_host_url + remaining_url
 
     def http_exc_handler(http_func):
@@ -69,19 +74,23 @@ class DcnmHelper:
         @wraps(http_func)
         def exc_handler_int(*args):
             try:
-                fn_name = http_func.__name__
-                return http_func(*args)
-            except HTTPError as http_err:
-                LOG.error("HTTP error during call to %(func)s, %(err)s",
-                          {'func': fn_name, 'err': http_err})
+                try:
+                    fn_name = http_func.__name__
+                    return http_func(*args)
+                except HTTPError as http_err:
+                    LOG.error("HTTP error during call to %(func)s, %(err)s",
+                              {'func': fn_name, 'err': http_err})
+            except Exception as exc:
+                LOG.error("General error during call to %(func)s, %(err)s",
+                          {'func': fn_name, 'err': exc})
         return exc_handler_int
 
     @http_exc_handler
-    def login(self):
+    def login_pre_nd(self):
         '''
         Function for login to DCNM.
         '''
-        login_url = self._build_url('rest/logon')
+        login_url = self._build_url('rest/logon', flag=False)
         payload = {'expirationTime': self._expiration_time}
         res = requests.post(login_url, data=json.dumps(payload),
                             headers=self._req_headers,
@@ -97,13 +106,73 @@ class DcnmHelper:
         return False
 
     @http_exc_handler
+    def login_post_nd(self):
+        '''
+        Function for login to DCNM.
+        '''
+        login_url = self._build_url('login', flag=False)
+        payload = {'expirationTime': self._expiration_time,
+                   'userName': self._user, 'userPasswd': self._pwd,
+                   'domain': 'DefaultAuth'}
+        res = requests.post(login_url, data=json.dumps(payload),
+                            headers=self._req_headers,
+                            #auth=(self._user, self._pwd),
+                            timeout=self._timeout_resp, verify=False)
+        session_id = ""
+        if res and res.status_code in self._resp_ok:
+            session_id = res.json().get('jwttoken')
+            self._req_headers.update({'Authorization': 'Bearer ' + session_id})
+            return True
+        LOG.error("Login failed with status %(status)s",
+                  {'status': res.status_code})
+        return False
+
+    def login(self):
+        '''
+        Function for login from DCNM.
+        '''
+        if self._is_post_nd:
+            return self.login_post_nd()
+        return self.login_pre_nd()
+
+    def _check_nd_release(self):
+        '''
+        Function to check ND release.
+        '''
+        ret = self.login_post_nd()
+        if ret:
+            self.logout_post_nd()
+            return True
+        ret = self.login_pre_nd()
+        if ret:
+            self.logout_pre_nd()
+            return False
+
+    @http_exc_handler
+    def logout_pre_nd(self):
+        '''
+        Function for logoff from DCNM.
+        '''
+        logout_url = self._build_url('rest/logout', flag=False)
+        requests.post(logout_url, headers=self._req_headers,
+                      timeout=self._timeout_resp, verify=False)
+
+    @http_exc_handler
+    def logout_post_nd(self):
+        '''
+        Function for logoff from DCNM.
+        '''
+        logout_url = self._build_url('logout', flag=False)
+        requests.post(logout_url, headers=self._req_headers,
+                      timeout=self._timeout_resp, verify=False)
+
     def logout(self):
         '''
         Function for logoff from DCNM.
         '''
-        logout_url = self._build_url('rest/logout')
-        requests.post(logout_url, headers=self._req_headers,
-                      timeout=self._timeout_resp, verify=False)
+        if self._is_post_nd:
+            return self.logout_post_nd()
+        return self.logout_pre_nd()
 
     def _get_snum_from_name(self, name, data):
         '''
