@@ -40,7 +40,7 @@ else:
     CFG_DIR = './etc/vmm_workload_auto'
 
 setup(name='vmm_workload_auto',
-      version='1.0.4',
+      version='1.0.5',
       description='Workload Automation for VMM',
       author='Padmanabhan Krishnan',
       author_email='padkrish@cisco.com',

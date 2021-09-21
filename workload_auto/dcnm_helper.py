@@ -63,7 +63,7 @@ class DcnmHelper:
         '''
         if flag:
             if self._is_post_nd:
-                new = self._protocol_host_url +  "appcenter/cisco/dcnm/api/v1/"
+                new = self._protocol_host_url +  "appcenter/cisco/ndfc/api/v1/"
                 return new + remaining_url
         return self._protocol_host_url + remaining_url
 
