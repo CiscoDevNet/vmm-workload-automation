@@ -58,7 +58,7 @@ setup(name='vmm_workload_auto',
                     'config/conf_multiple_dcnm.yml',
                     'config/conf_multiple_vcenter.yml'])],
       install_requires=[
-          'pyvim==3.0.2', 'pyvmomi==7.0', 'PyYAML==5.3', 'Flask',
+          'pyvim==3.0.2', 'pyvmomi==7.0', 'PyYAML==5.4', 'Flask',
       ],
       entry_points={
           'console_scripts': ['vmm_workload_auto = workload_auto.main:wl_auto_main']
